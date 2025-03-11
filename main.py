@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 import logging
 import uvicorn
+import json
 
 # 로깅 설정
 logging.basicConfig(
@@ -13,19 +14,39 @@ app = FastAPI()
 
 @app.post("/webhook")
 async def github_webhook(request: Request):
-    # webhook 페이로드를 딕셔너리로 받기
     try:
-        payload = await request.json()
+        # 원본 요청 데이터 로깅
+        body = await request.body()
+        logger.debug("Raw request body: %s", body.decode())
         
-        # 디버깅을 위한 로그 출력
-        logger.debug("Received webhook payload:")
-        logger.debug(f"Event type: {request.headers.get('X-GitHub-Event', 'No event type')}")
-        logger.debug(f"Delivery ID: {request.headers.get('X-GitHub-Delivery', 'No delivery ID')}")
-        logger.debug(f"Payload: {payload}")
+        # 헤더 정보 로깅
+        logger.debug("Request headers:")
+        for name, value in request.headers.items():
+            logger.debug(f"{name}: {value}")
+
+        # JSON 파싱
+        try:
+            payload = json.loads(body.decode())
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parsing error: {str(e)}")
+            logger.error(f"Error position: line {e.lineno}, column {e.colno}")
+            return {"status": "error", "message": f"Invalid JSON format: {str(e)}"}
         
-        return {"status": "success", "message": "Webhook received"}
+        # 웹훅 이벤트 타입 확인
+        event_type = request.headers.get("X-GitHub-Event", "no-event")
+        logger.info(f"Received {event_type} event")
+        
+        # 페이로드 처리
+        if event_type == "push":
+            logger.info(f"Push to {payload.get('ref')} by {payload.get('pusher', {}).get('name')}")
+            if 'commits' in payload:
+                for commit in payload['commits']:
+                    logger.info(f"Commit: {commit.get('message', 'No message')} ({commit.get('id', 'No ID')})")
+        
+        return {"status": "success", "message": "Webhook received and processed"}
+        
     except Exception as e:
-        logger.error(f"Error processing webhook: {str(e)}")
+        logger.exception("Error processing webhook")
         return {"status": "error", "message": str(e)}
 
 if __name__ == "__main__":
