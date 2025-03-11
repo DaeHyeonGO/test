@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 import logging
 import uvicorn
 import json
+import re
 
 # 로깅 설정
 logging.basicConfig(
@@ -14,17 +15,29 @@ app = FastAPI()
 
 def clean_json_string(json_str: str) -> str:
     """JSON 문자열을 정제하고 이스케이프 문자를 처리합니다."""
-    # 제어 문자 제거
-    import re
-    json_str = re.sub(r'[\x00-\x1F\x7F]', '', json_str)
-    return json_str 
+    try:
+        # 따옴표가 닫히지 않은 문자열 찾기
+        pattern = r'"([^"]*)"'
+        def replace_invalid_chars(match):
+            # 매칭된 문자열에서 따옴표 제외
+            content = match.group(1)
+            # 유니코드 이스케이프 처리
+            cleaned = content.encode('utf-8').decode('utf-8')
+            return f'"{cleaned}"'
+        
+        # 정규식으로 문자열 부분만 처리
+        cleaned_json = re.sub(pattern, replace_invalid_chars, json_str)
+        return cleaned_json
+    except Exception as e:
+        logger.error(f"Error cleaning JSON string: {str(e)}")
+        return json_str
 
 @app.post("/webhook")
 async def github_webhook(request: Request):
     try:
         # 원본 요청 데이터 로깅
         body = await request.body()
-        raw_data = body.decode('utf-8')
+        raw_data = body.decode('utf-8', errors='replace')
         logger.debug("Raw request body: %s", raw_data)
         
         # 헤더 정보 로깅
