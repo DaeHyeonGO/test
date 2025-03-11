@@ -10,23 +10,26 @@ jobs:
     runs-on: self-hosted  # 내부망에 설치된 러너
     steps:
       - name: Send webhook request via curl
+        shell: cmd
         run: |
-          curl -X POST \
-            -H "Content-Type: application/json" \
-            -H "X-GitHub-Event: push" \
-            -d '{
-              "ref": "${{ github.ref }}",
-              "before": "${{ github.event.before }}",
-              "after": "${{ github.event.after }}",
-              "repository": {
-                "name": "${{ github.repository }}",
-                "owner": {
-                  "login": "${{ github.repository_owner }}"
-                }
-              },
-              "pusher": {
-                "name": "${{ github.actor }}"
-              },
-              "commits": ${{ toJson(github.event.commits) }}
-            }' \
+          set "PAYLOAD={
+            \"ref\": \"${{ github.ref }}\",
+            \"before\": \"${{ github.event.before }}\",
+            \"after\": \"${{ github.event.after }}\",
+            \"repository\": {
+              \"name\": \"${{ github.repository }}\",
+              \"owner\": {
+                \"login\": \"${{ github.repository_owner }}\"
+              }
+            },
+            \"pusher\": {
+              \"name\": \"${{ github.actor }}\"
+            },
+            \"commits\": ${{ toJson(github.event.commits) }}
+          }"
+          
+          curl.exe -X POST ^
+            -H "Content-Type: application/json" ^
+            -H "X-GitHub-Event: push" ^
+            -d "%PAYLOAD%" ^
             http://127.0.0.1:8080/webhook  # 내부망 서버 URL
