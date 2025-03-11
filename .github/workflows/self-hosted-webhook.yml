@@ -14,23 +14,13 @@ jobs:
     steps:
       - name: Send webhook
         shell: cmd
-        run: |
-          echo "Sending webhook to local server..."
-          curl.exe -X POST ^
-            -H "Content-Type: application/json" ^
-            -H "X-GitHub-Event: push" ^
-            -H "X-GitHub-Delivery: ${{ github.run_id }}" ^
-            -d "{
-              \"ref\": \"${{ github.ref }}\",
-              \"repository\": {
-                \"full_name\": \"${{ github.repository }}\"
-              },
-              \"pusher\": {
-                \"name\": \"${{ github.actor }}\"
-              },
-              \"commits\": ${{ toJson(github.event.commits) }}
-            }" ^
-            http://localhost:8000/webhook
+        run: >
+          curl.exe -X POST 
+          -H "Content-Type: application/json" 
+          -H "X-GitHub-Event: push" 
+          -H "X-GitHub-Delivery: ${{ github.run_id }}" 
+          -d "{\"ref\":\"${{ github.ref }}\",\"repository\":{\"full_name\":\"${{ github.repository }}\"},\"pusher\":{\"name\":\"${{ github.actor }}\"},\"commits\":${{ toJson(github.event.commits) }}}" 
+          http://localhost:8000/webhook
       
       - name: Check server logs
         shell: cmd
