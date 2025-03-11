@@ -13,16 +13,39 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Send webhook
-        shell: cmd
-        run: >
-          curl.exe -X POST 
-          -H "Content-Type: application/json" 
-          -H "X-GitHub-Event: push" 
-          -H "X-GitHub-Delivery: ${{ github.run_id }}" 
-          -H "User-Agent: GitHub-Hookshot/044aadd" 
-          -d "{\"ref\":\"refs/heads/main\",\"before\":\"${{ github.event.before }}\",\"after\":\"${{ github.event.after }}\",\"repository\":{\"id\":${{ github.repository_id }},\"name\":\"${{ github.event.repository.name }}\",\"full_name\":\"${{ github.repository }}\",\"owner\":{\"name\":\"${{ github.repository_owner }}\",\"email\":\"${{ github.event.pusher.email }}\",\"login\":\"${{ github.repository_owner }}\"}},\"pusher\":{\"name\":\"${{ github.actor }}\",\"email\":\"${{ github.event.pusher.email }}\"},\"commits\":${{ toJson(github.event.commits) }},\"head_commit\":${{ toJson(github.event.head_commit) }}}" 
-          http://localhost:8000/webhook
-      
+        shell: powershell
+        run: |
+          $headers = @{
+            'Content-Type' = 'application/json'
+            'X-GitHub-Event' = 'push'
+            'X-GitHub-Delivery' = '${{ github.run_id }}'
+            'User-Agent' = 'GitHub-Hookshot/044aadd'
+          }
+          
+          $body = '{
+            "ref": "refs/heads/main",
+            "before": "${{ github.event.before }}",
+            "after": "${{ github.event.after }}",
+            "repository": {
+              "id": ${{ github.repository_id }},
+              "name": "${{ github.event.repository.name }}",
+              "full_name": "${{ github.repository }}",
+              "owner": {
+                "name": "${{ github.repository_owner }}",
+                "email": "${{ github.event.pusher.email }}",
+                "login": "${{ github.repository_owner }}"
+              }
+            },
+            "pusher": {
+              "name": "${{ github.actor }}",
+              "email": "${{ github.event.pusher.email }}"
+            },
+            "commits": ${{ toJson(github.event.commits) }},
+            "head_commit": ${{ toJson(github.event.head_commit) }}
+          }'
+          
+          Invoke-RestMethod -Uri "http://localhost:8000/webhook" -Method Post -Headers $headers -Body $body -ContentType "application/json"
+
       - name: Check server logs
         shell: cmd
         run: |
