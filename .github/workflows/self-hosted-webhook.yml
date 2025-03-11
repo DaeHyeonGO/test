@@ -1,35 +1,40 @@
-name: Simulate Webhook with Curl
+name: Webhook Workflow
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  repository_dispatch:
+    types: [webhook-trigger]
 
 jobs:
-  send-webhook:
-    runs-on: self-hosted  # 내부망에 설치된 러너
+  build:
+    runs-on: self-hosted
     steps:
-      - name: Send webhook request via curl
+      - name: Send webhook
         shell: cmd
         run: |
-          set "PAYLOAD={
-            \"ref\": \"${{ github.ref }}\",
-            \"before\": \"${{ github.event.before }}\",
-            \"after\": \"${{ github.event.after }}\",
-            \"repository\": {
-              \"name\": \"${{ github.repository }}\",
-              \"owner\": {
-                \"login\": \"${{ github.repository_owner }}\"
-              }
-            },
-            \"pusher\": {
-              \"name\": \"${{ github.actor }}\"
-            },
-            \"commits\": ${{ toJson(github.event.commits) }}
-          }"
-          
+          echo "Sending webhook to local server..."
           curl.exe -X POST ^
             -H "Content-Type: application/json" ^
             -H "X-GitHub-Event: push" ^
-            -d "%PAYLOAD%" ^
-            http://127.0.0.1:8080/webhook  # 내부망 서버 URL
+            -H "X-GitHub-Delivery: ${{ github.run_id }}" ^
+            -d "{
+              \"ref\": \"${{ github.ref }}\",
+              \"repository\": {
+                \"full_name\": \"${{ github.repository }}\"
+              },
+              \"pusher\": {
+                \"name\": \"${{ github.actor }}\"
+              },
+              \"commits\": ${{ toJson(github.event.commits) }}
+            }" ^
+            http://localhost:8000/webhook
+      
+      - name: Check server logs
+        shell: cmd
+        run: |
+          echo "Checking server logs..."
+          timeout /t 2
+          type webhook_test.log
