@@ -20,27 +20,7 @@ jobs:
           -H "X-GitHub-Event: push" 
           -H "X-GitHub-Delivery: ${{ github.run_id }}" 
           -H "User-Agent: GitHub-Hookshot/044aadd" 
-          -d "{
-            \"ref\": \"${{ github.ref }}\",
-            \"before\": \"${{ github.event.before }}\",
-            \"after\": \"${{ github.event.after }}\",
-            \"repository\": {
-              \"id\": ${{ github.repository_id }},
-              \"name\": \"${{ github.event.repository.name }}\",
-              \"full_name\": \"${{ github.repository }}\",
-              \"owner\": {
-                \"name\": \"${{ github.repository_owner }}\",
-                \"email\": \"${{ github.event.pusher.email }}\",
-                \"login\": \"${{ github.repository_owner }}\"
-              }
-            },
-            \"pusher\": {
-              \"name\": \"${{ github.actor }}\",
-              \"email\": \"${{ github.event.pusher.email }}\"
-            },
-            \"commits\": ${{ toJson(github.event.commits) }},
-            \"head_commit\": ${{ toJson(github.event.head_commit) }}
-          }" 
+          -d "{\"ref\":\"refs/heads/main\",\"before\":\"${{ github.event.before }}\",\"after\":\"${{ github.event.after }}\",\"repository\":{\"id\":${{ github.repository_id }},\"name\":\"${{ github.event.repository.name }}\",\"full_name\":\"${{ github.repository }}\",\"owner\":{\"name\":\"${{ github.repository_owner }}\",\"email\":\"${{ github.event.pusher.email }}\",\"login\":\"${{ github.repository_owner }}\"}},\"pusher\":{\"name\":\"${{ github.actor }}\",\"email\":\"${{ github.event.pusher.email }}\"},\"commits\":${{ toJson(github.event.commits) }},\"head_commit\":${{ toJson(github.event.head_commit) }}}" 
           http://localhost:8000/webhook
       
       - name: Check server logs
