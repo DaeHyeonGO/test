@@ -1,6 +1,4 @@
-# GitHub Webhook Listener
-
-GitHub webhook 요청을 받아서 디버그 로그를 출력하는 FastAPI 애플리케이션입니다.
+# GitHub Action
 
 ## 설치 방법
 
@@ -16,13 +14,8 @@ python main.py
 
 서버는 `http://localhost:8000/webhook`에서 GitHub webhook 요청을 수신합니다.
 
-## GitHub Webhook 설정 방법
-
-1. GitHub 리포지토리의 Settings > Webhooks로 이동
-2. "Add webhook" 클릭
-3. Payload URL에 `http://your-server:8000/webhook` 입력
-4. Content type을 `application/json`으로 설정
-5. 원하는 이벤트 선택
-6. "Add webhook" 클릭하여 저장 
-"# test" 
-"# test" 
+## GitHub Action 설정 방법
+```bash
+self-hosted-runner 추가, 로컬 컴퓨터에서 실행.
+self-hosted-runner.yml 를 추가하면 로컬러너가 실행함.
+```
