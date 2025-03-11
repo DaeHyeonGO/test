@@ -17,7 +17,7 @@ def clean_json_string(json_str: str) -> str:
     # 제어 문자 제거
     import re
     json_str = re.sub(r'[\x00-\x1F\x7F]', '', json_str)
-    return json_str
+    return json_str 
 
 @app.post("/webhook")
 async def github_webhook(request: Request):
